@@ -1,0 +1,51 @@
+
+consider the following database
+create table Hospital(h_no int primary key,h_name varchar(20),city varchar(10));
+
+insert into hospital values(101,'kamgar','shrampuar');
+insert into hospital values(102,'morge','shrampuar');
+insert into hospital values(103,'padghan','shrampuar');
+.........................................................................................................................................
+create table Doctor(d_no int primary key,d_name varchar(30),specialization varchar(35),charges int,h_no int references hospital);
+
+insert into doctor values(1,'Dr.gadhe','MBBS',1000,101);
+insert into doctor values(2,'Dr.kale','MBBS',500,102);
+insert into doctor values(3,'Dr.morge','MBBS',400,103);
+.........................................................................................................................................   
+(1)write a trigger before insert/update on doctor table raise exception if charges are<0.
+create or replace function f2()returns trigger 
+as
+$$
+begin
+if new.charges<0 then
+  raise exception'charges less than zero
+  not allowed!';
+  end if;
+  end;
+  $$
+  language plpgsql;
+  
+  create trigger t2 before update or insert on doctor for each row execute procedure f2(); 
+
+insert into doctor (charges) values(-32);
+............................................................................................................................................
+(2) write function using    cursor to accept the city name and print the names of all hospitals in that city.
+create or replace function f_1(c_name hospital.city%type) returns void 
+as 
+$$
+declare
+h1 hospital.h_name%type;
+c1 cursor for select h_name from hospital where city=c_name;
+begin
+open c1;
+loop
+fetch c1 into h1;
+exit when not found;
+raise notice'hospital name=%',h1;
+end loop;
+close c1;
+end;
+$$
+language plpgsql;
+
+select f_1('shrirampuar');
